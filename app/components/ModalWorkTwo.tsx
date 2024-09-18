@@ -23,6 +23,7 @@ export const ModalWorkTwo = ({ isModalOpen, onClose, onSelectChange }: ModalWork
       cancelText='Скасувати'
       onOk={handleSelectChange}
       okText='Так'
+      centered={true}
     >
       <Select
       className='m-3 ml-0 w-[300px]'
