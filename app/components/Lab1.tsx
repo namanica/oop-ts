@@ -21,7 +21,7 @@ const items: MenuItem[] = [
 
 export const Lab1 = () => {
   const [currentStage, setCurrentStage] = useState(0);
-  const [currentMenuItem, setCurrentMenuItem] = useState('work1');
+  const [currentMenuItem, setCurrentMenuItem] = useState('');
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const modalManager = new ModalManager(setCurrentStage);
 
