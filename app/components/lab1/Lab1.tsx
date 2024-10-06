@@ -3,7 +3,7 @@ import { Menu, MenuProps } from "antd";
 import { FirstModalWorkOne } from "./FirstModalWorkOne";
 import { SecondModalWorkOne } from "./SecondModalWorkOne";
 import { ModalWorkTwo } from "./ModalWorkTwo";
-import { ModalManager } from "../modules/ModalManager";
+import { ModalManager } from "../../modules/ModalManager";
 import { useState } from "react";
 
 type MenuItem = Required<MenuProps>['items'][number];
