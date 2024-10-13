@@ -27,6 +27,8 @@ export const Canvas: React.FC = () => {
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [currentTab, setCurrentTab] = useState("");
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [lastPosition, setLastPosition] = useState<{ x: number; y: number } | null>(null);
 
   const onClick: MenuProps["onClick"] = (e) => {
     setCurrentTab(e.key);
@@ -47,6 +49,40 @@ export const Canvas: React.FC = () => {
     }
   };
 
+  const startDrawing = (event: MouseEvent) => {
+    const rect = canvasRef.current!.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    setLastPosition({ x, y });
+    setIsDrawing(true);
+  };
+
+  const drawLine = (event: MouseEvent) => {
+    if (!isDrawing || !lastPosition || !canvasRef.current) return;
+
+    const ctx = canvasRef.current.getContext("2d");
+    if (!ctx) return;
+
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    ctx.beginPath();
+    ctx.moveTo(lastPosition.x, lastPosition.y);
+    ctx.lineTo(x, y);
+    ctx.strokeStyle = "blue";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    setLastPosition({ x, y });
+  };
+
+  const stopDrawing = () => {
+    setIsDrawing(false);
+    setLastPosition(null);
+  };
+
   useEffect(() => {
     const canvas = canvasRef.current;
 
@@ -55,11 +91,31 @@ export const Canvas: React.FC = () => {
     }
 
     return () => {
-      if (canvas) {
+      if (canvas && currentTab === "dot") {
         canvas.removeEventListener("mousedown", drawDot);
       }
     };
   }, [currentTab]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+
+    if (canvas && currentTab === "line") {
+      canvas.addEventListener("mousedown", startDrawing);
+      canvas.addEventListener("mousemove", drawLine);
+      canvas.addEventListener("mouseup", stopDrawing);
+      canvas.addEventListener("mouseleave", stopDrawing);
+    }
+
+    return () => {
+      if (canvas && currentTab === "line") {
+        canvas.removeEventListener("mousedown", startDrawing);
+        canvas.removeEventListener("mousemove", drawLine);
+        canvas.removeEventListener("mouseup", stopDrawing);
+        canvas.removeEventListener("mouseleave", stopDrawing);
+      }
+    };
+  }, [currentTab, isDrawing, lastPosition]);
 
   return (
     <div>
