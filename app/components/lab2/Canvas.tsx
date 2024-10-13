@@ -28,7 +28,19 @@ export const Canvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [currentTab, setCurrentTab] = useState("");
   const [isDrawing, setIsDrawing] = useState(false);
-  const [lastPosition, setLastPosition] = useState<{ x: number; y: number } | null>(null);
+  const [lastPosition, setLastPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+  const [currentRect, setCurrentRect] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const [rectangles, setRectangles] = useState<
+    Array<{ x: number; y: number; width: number; height: number }>
+  >([]);
 
   const onClick: MenuProps["onClick"] = (e) => {
     setCurrentTab(e.key);
@@ -83,6 +95,77 @@ export const Canvas: React.FC = () => {
     setLastPosition(null);
   };
 
+  const startRectangle = (event: MouseEvent) => {
+    const rect = canvasRef.current!.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    setCurrentRect({ x, y, width: 0, height: 0 });
+    setIsDrawing(true);
+  };
+
+  const drawRectangle = (event: MouseEvent) => {
+    if (!isDrawing || !currentRect || !canvasRef.current) return;
+
+    const ctx = canvasRef.current.getContext("2d");
+    if (!ctx) return;
+
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    const width = x - currentRect.x;
+    const height = y - currentRect.y;
+
+    ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    rectangles.forEach((r) => {
+      ctx.fillStyle = "yellow";
+      ctx.fillRect(r.x, r.y, r.width, r.height);
+      ctx.strokeStyle = "black";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(r.x, r.y, r.width, r.height);
+    });
+
+    ctx.strokeStyle = "blue";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(currentRect.x, currentRect.y, width, height);
+
+    setCurrentRect((prevRect) =>
+      prevRect ? { ...prevRect, width, height } : null
+    );
+  };
+
+  const stopRectangle = () => {
+    if (currentRect) {
+      const finishedRect = { ...currentRect };
+      setRectangles((prev) => [...prev, finishedRect]);
+
+      if (canvasRef.current) {
+        const ctx = canvasRef.current.getContext("2d");
+        if (ctx) {
+          ctx.fillStyle = "yellow";
+          ctx.fillRect(
+            finishedRect.x,
+            finishedRect.y,
+            finishedRect.width,
+            finishedRect.height
+          );
+          ctx.strokeStyle = "black";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(
+            finishedRect.x,
+            finishedRect.y,
+            finishedRect.width,
+            finishedRect.height
+          );
+        }
+      }
+    }
+
+    setIsDrawing(false);
+    setCurrentRect(null);
+  };
+
   useEffect(() => {
     const canvas = canvasRef.current;
 
@@ -116,6 +199,27 @@ export const Canvas: React.FC = () => {
       }
     };
   }, [currentTab, isDrawing, lastPosition]);
+
+  // Effect for Rectangle
+  useEffect(() => {
+    const canvas = canvasRef.current;
+
+    if (canvas && currentTab === "rectangle") {
+      canvas.addEventListener("mousedown", startRectangle);
+      canvas.addEventListener("mousemove", drawRectangle);
+      canvas.addEventListener("mouseup", stopRectangle);
+      canvas.addEventListener("mouseleave", stopRectangle);
+    }
+
+    return () => {
+      if (canvas && currentTab === "rectangle") {
+        canvas.removeEventListener("mousedown", startRectangle);
+        canvas.removeEventListener("mousemove", drawRectangle);
+        canvas.removeEventListener("mouseup", stopRectangle);
+        canvas.removeEventListener("mouseleave", stopRectangle);
+      }
+    };
+  }, [currentTab, isDrawing, currentRect, rectangles]);
 
   return (
     <div>
