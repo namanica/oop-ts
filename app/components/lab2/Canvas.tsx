@@ -42,6 +42,15 @@ export const Canvas: React.FC = () => {
     width: number;
     height: number;
   } | null>(null);
+  const [ellipses, setEllipses] = useState<
+    Array<{ x: number; y: number; radiusX: number; radiusY: number }>
+  >([]);
+  const [currentEllipse, setCurrentEllipse] = useState<{
+    x: number;
+    y: number;
+    radiusX: number;
+    radiusY: number;
+  } | null>(null);
 
   const drawDot = (event: MouseEvent) => {
     if (canvasRef.current) {
@@ -105,6 +114,40 @@ export const Canvas: React.FC = () => {
     setCurrentRect(null);
   };
 
+  const startEllipse = (event: MouseEvent) => {
+    const rect = canvasRef.current!.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    setCurrentEllipse({ x, y, radiusX: 0, radiusY: 0 });
+    setIsDrawing(true);
+  };
+
+  const drawEllipse = (event: MouseEvent) => {
+    if (!isDrawing || !currentEllipse || !canvasRef.current) return;
+
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    const radiusX = Math.abs(x - currentEllipse.x);
+    const radiusY = Math.abs(y - currentEllipse.y);
+
+    setCurrentEllipse((prevEllipse) =>
+      prevEllipse ? { ...prevEllipse, radiusX, radiusY } : null
+    );
+  };
+
+  const stopEllipse = () => {
+    if (currentEllipse) {
+      const finishedEllipse = { ...currentEllipse };
+      setEllipses((prev) => [...prev, finishedEllipse]);
+    }
+
+    setIsDrawing(false);
+    setCurrentEllipse(null);
+  };
+
   useEffect(() => {
     if (canvasRef.current) {
       const ctx = canvasRef.current.getContext("2d");
@@ -128,6 +171,7 @@ export const Canvas: React.FC = () => {
         });
 
         rectangles.forEach((r) => {
+          ctx.beginPath();
           ctx.fillStyle = "yellow";
           ctx.fillRect(r.x, r.y, r.width, r.height);
           ctx.strokeStyle = "black";
@@ -145,9 +189,35 @@ export const Canvas: React.FC = () => {
             currentRect.height
           );
         }
+
+        ellipses.forEach((e) => {
+          ctx.beginPath();
+          ctx.ellipse(e.x, e.y, e.radiusX, e.radiusY, 0, 0, Math.PI * 2);
+          ctx.fillStyle = "grey";
+          ctx.fill();
+          ctx.strokeStyle = "black";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        });
+
+        if (currentEllipse) {
+          ctx.beginPath();
+          ctx.ellipse(
+            currentEllipse.x,
+            currentEllipse.y,
+            currentEllipse.radiusX,
+            currentEllipse.radiusY,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.strokeStyle = "blue";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
       }
     }
-  }, [dots, lines, rectangles, currentRect]);
+  }, [dots, lines, rectangles, currentRect, ellipses, currentEllipse]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -202,6 +272,26 @@ export const Canvas: React.FC = () => {
       }
     };
   }, [currentTab, isDrawing, currentRect, rectangles]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+
+    if (canvas && currentTab === "ellipse") {
+      canvas.addEventListener("mousedown", startEllipse);
+      canvas.addEventListener("mousemove", drawEllipse);
+      canvas.addEventListener("mouseup", stopEllipse);
+      canvas.addEventListener("mouseleave", stopEllipse);
+    }
+
+    return () => {
+      if (canvas && currentTab === "ellipse") {
+        canvas.removeEventListener("mousedown", startEllipse);
+        canvas.removeEventListener("mousemove", drawEllipse);
+        canvas.removeEventListener("mouseup", stopEllipse);
+        canvas.removeEventListener("mouseleave", stopEllipse);
+      }
+    };
+  }, [currentTab, isDrawing, currentEllipse]);
 
   return (
     <div>
