@@ -2,7 +2,7 @@ import { Menu, MenuProps } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { items } from "./constants";
 
-export const Canvas: React.FC = () => {
+export const Lab2: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [currentTab, setCurrentTab] = useState("");
   const onClick: MenuProps["onClick"] = (e) => {
@@ -305,7 +305,7 @@ export const Canvas: React.FC = () => {
       </div>
       <canvas
         ref={canvasRef}
-        style={{ border: "1px solid blue", margin: "10px" }}
+        style={{ margin: "10px", boxShadow: '0 4px 10px rgba(0, 0, 0, 0.2)' }}
         width={700}
         height={400}
       />
