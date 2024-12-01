@@ -7,6 +7,10 @@ export abstract class Shape {
   abstract draw(ctx: CanvasRenderingContext2D): void;
 }
 
+export interface Previewable {
+  drawPreview(ctx: CanvasRenderingContext2D): void;
+}
+
 export class Dot extends Shape {
   private x: number;
   private y: number;
@@ -55,7 +59,7 @@ export class Line extends Shape {
   }
 }
 
-export class Rectangle extends Shape {
+export class Rectangle extends Shape implements Previewable {
   private x: number;
   private y: number;
   private width: number;
@@ -81,9 +85,14 @@ export class Rectangle extends Shape {
     ctx.strokeStyle = "black";
     ctx.strokeRect(this.x, this.y, this.width, this.height);
   }
+
+  drawPreview(ctx: CanvasRenderingContext2D): void {
+    ctx.strokeStyle = "blue";
+    ctx.strokeRect(this.x, this.y, this.width, this.height);
+  }
 }
 
-export class Ellipse extends Shape {
+export class Ellipse extends Shape implements Previewable {
   private x: number;
   private y: number;
   private radiusX: number;
@@ -109,6 +118,13 @@ export class Ellipse extends Shape {
     ctx.fillStyle = this.color;
     ctx.fill();
     ctx.strokeStyle = "black";
+    ctx.stroke();
+  }
+
+  drawPreview(ctx: CanvasRenderingContext2D): void {
+    ctx.beginPath();
+    ctx.ellipse(this.x, this.y, this.radiusX, this.radiusY, 0, 0, Math.PI * 2);
+    ctx.strokeStyle = "blue";
     ctx.stroke();
   }
 }
