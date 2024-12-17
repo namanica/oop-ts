@@ -1,8 +1,8 @@
 import Icon, { BorderOutlined, LineOutlined } from "@ant-design/icons";
 import { Button, Tooltip } from "antd";
 import { useState } from "react";
-import { DotIcon } from "./icons/DotIcon";
-import { EllipseIcon } from "./icons/EllipseIcon";
+import { DotIcon } from "../../assets/icons/DotIcon";
+import { EllipseIcon } from "../../assets/icons/EllipseIcon";
 
 interface ToolbarProps {
   onClick: (key: string) => void;
