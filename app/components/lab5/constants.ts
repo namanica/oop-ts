@@ -1,20 +1,25 @@
 import { MenuProps } from "antd";
+import { WebviewWindow } from "@tauri-apps/api/window";
+
+const openTable = () => {
+  new WebviewWindow("table", {
+    url: "/?window=table",
+    title: "table",
+    width: 800,
+    height: 600,
+    resizable: true,
+  });
+};
+
+const closeTable = async () => {
+  const targetWindow = WebviewWindow.getByLabel("table");
+  if (targetWindow) {
+    await targetWindow.close();
+  }
+};
 
 type MenuItem = Required<MenuProps>["items"][number];
 export const items: MenuItem[] = [
-  {
-    label: "Файл",
-    key: "file",
-    children: [
-      { label: "Створити", key: "create" },
-      { label: "Відкрити", key: "open" },
-      { label: "Зберегти", key: "save" },
-      { type: "divider" },
-      { label: "Друк", key: "print" },
-      { type: "divider" },
-      { label: "Вихід", key: "exit" },
-    ],
-  },
   {
     label: "Обʼєкти",
     key: "objects",
@@ -28,7 +33,15 @@ export const items: MenuItem[] = [
     ],
   },
   {
-    label: "Довідка",
-    key: "note",
+    label: "Таблиця",
+    key: "table",
+    children: [
+      {
+        label: "Відкрити",
+        key: "open_table",
+        onClick: () => openTable(),
+      },
+      { label: "Закрити", key: "close_table", onClick: () => closeTable() },
+    ],
   },
 ];

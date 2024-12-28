@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 // import { Lab3 } from "./components/lab3/Lab3";
 // import { Lab4 } from "./components/lab4/Lab4";
 import { Lab5 } from "./components/lab5/Lab5";
+import { Table } from "./components/lab5/Table";
 
 const App = () => {
   const [isClient, setIsClient] = useState(false);
@@ -13,6 +14,13 @@ const App = () => {
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const isTable = urlParams.get("window") === "table";
+
+  if (isTable && isClient) {
+    return <Table />;
+  }
 
   return <div>{isClient && <Lab5 />}</div>;
 };
