@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+//set any because of changing the prev state
 import React, { useEffect, useRef, useState } from "react";
 import { Menu, MenuProps } from "antd";
 import {
@@ -12,9 +14,13 @@ import {
 import { items } from "./constants";
 import { Toolbar } from "./Toolbar";
 
-export const Lab5: React.FC = () => {
+interface Lab5Props {
+  shapes: Shape[];
+  setShapes: (shape: any) => void;
+}
+
+export const Lab5 = ({ shapes, setShapes }: Lab5Props) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [shapes, setShapes] = useState<Shape[]>([]);
   const [currentTab, setCurrentTab] = useState("");
   const [isDrawing, setIsDrawing] = useState(false);
   const [lastPosition, setLastPosition] = useState<{
@@ -89,7 +95,7 @@ export const Lab5: React.FC = () => {
     if (preview && newShape) {
       setPreviewShape(newShape);
     } else if (newShape) {
-      setShapes((prev) => [...prev, newShape]);
+      setShapes((prev: Shape[]) => [...prev, newShape]);
     }
   };
 
