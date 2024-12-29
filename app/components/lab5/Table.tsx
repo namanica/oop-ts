@@ -4,66 +4,7 @@ import { Table as AntTable, Button } from "antd";
 import { useEffect, useState } from "react";
 import { DeleteOutlined } from "@ant-design/icons";
 import { WebviewWindow } from "@tauri-apps/api/window";
-import {
-  Cube,
-  Dot,
-  Ellipse,
-  Line,
-  LineWithCircles,
-  Rectangle,
-} from "@/app/modules/MyEditor";
-
-export const getDrawnObject = (shape: any) => {
-  if (shape.radiusX && !shape.radius) return "Еліпс";
-  if (shape.width && !shape.depth) return "Прямокутник";
-  if (shape.radius) return "Лінія з кружечками";
-  if (shape.depth) return "Куб";
-  if (shape.startX && !shape.radius) return "Лінія";
-  return "Крапка";
-};
-
-export const formatToClass = (shapes: any[]) => {
-  return shapes.map((shape) => {
-    const objectName = getDrawnObject(shape);
-    if (objectName === "Еліпс") {
-      return new Ellipse(
-        shape.x,
-        shape.y,
-        shape.radiusX,
-        shape.radiusY,
-        shape.color
-      );
-    } else if (objectName === "Крапка") {
-      return new Dot(shape.x, shape.y, shape.color);
-    } else if (objectName === "Куб") {
-      return new Cube(shape.x, shape.y, shape.width, shape.height, shape.color);
-    } else if (objectName === "Лінія") {
-      return new Line(
-        shape.startX,
-        shape.startY,
-        shape.endX,
-        shape.endY,
-        shape.color
-      );
-    } else if (objectName === "Лінія з кружечками") {
-      return new LineWithCircles(
-        shape.startX,
-        shape.startY,
-        shape.endX,
-        shape.endY,
-        shape.color
-      );
-    } else if (objectName === "Прямокутник") {
-      return new Rectangle(
-        shape.x,
-        shape.y,
-        shape.width,
-        shape.height,
-        shape.color
-      );
-    }
-  });
-};
+import { getDrawnObject } from "./constants";
 
 interface ShapesForTable {
   key: number;
@@ -140,12 +81,7 @@ export const Table = () => {
     };
   }, []);
 
-  const [selectedKeys, setSelectedKeys] = useState<number[]>([]);
-  console.log(selectedKeys);
-
   const handleSelect = (selectedRowKeys: React.Key[]) => {
-    setSelectedKeys(selectedRowKeys as number[]);
-
     const mainWindow = WebviewWindow.getByLabel("main");
     if (mainWindow) {
       mainWindow.emit("highlight-shapes", selectedRowKeys);

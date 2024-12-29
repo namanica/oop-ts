@@ -6,14 +6,17 @@ import { useEffect, useState } from "react";
 // import { Lab3 } from "./components/lab3/Lab3";
 // import { Lab4 } from "./components/lab4/Lab4";
 import { Lab5 } from "./components/lab5/Lab5";
-import { formatToClass, Table } from "./components/lab5/Table";
+import { Table } from "./components/lab5/Table";
 import { Shape } from "./modules/MyEditor";
 import { WebviewWindow } from "@tauri-apps/api/window";
 import { listen } from "@tauri-apps/api/event";
+import { formatToClass } from "./components/lab5/constants";
 
 const App = () => {
   const [isClient, setIsClient] = useState(false);
   const [shapes, setShapes] = useState<any[]>([]);
+  const urlParams = new URLSearchParams(window.location.search);
+  const isTable = urlParams.get("window") === "table";
 
   useEffect(() => {
     setIsClient(true);
@@ -45,9 +48,6 @@ const App = () => {
       unlisten.then((cleanup) => cleanup());
     };
   }, [shapes]);
-
-  const urlParams = new URLSearchParams(window.location.search);
-  const isTable = urlParams.get("window") === "table";
 
   useEffect(() => {
     if (!isTable && isClient) {
