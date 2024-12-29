@@ -2,6 +2,8 @@
 import { listen } from "@tauri-apps/api/event";
 import { Table as AntTable } from "antd";
 import { useEffect, useState } from "react";
+import { writeFile } from "@tauri-apps/api/fs";
+import { desktopDir } from "@tauri-apps/api/path";
 
 const columns = [
   {
@@ -43,36 +45,68 @@ const columns = [
 
 export const Table = () => {
   const [receivedShapes, setReceivedShapes] = useState<any[]>([]);
-  useEffect(() => {
-    const unlisten = listen<any[]>("send-shapes", (event) => {
-      const shapes = event.payload.map((shape, index) => {
-        let objectName;
-        if (shape.radiusX && !shape.radius) {
-          objectName = "Еліпс";
-        } else if (shape.width && !shape.depth) {
-          objectName = "Прямокутник";
-        } else if (shape.radius) {
-          objectName = "Лінія з кружечками";
-        } else if (shape.depth) {
-          objectName = "Куб";
-        } else if (shape.startX && !shape.radius) {
-          objectName = "Лінія";
-        } else {
-          objectName = "Крапка";
-        }
+  const getDrawnObject = (shape: any) => {
+    let objectName;
+    if (shape.radiusX && !shape.radius) {
+      objectName = "Еліпс";
+    } else if (shape.width && !shape.depth) {
+      objectName = "Прямокутник";
+    } else if (shape.radius) {
+      objectName = "Лінія з кружечками";
+    } else if (shape.depth) {
+      objectName = "Куб";
+    } else if (shape.startX && !shape.radius) {
+      objectName = "Лінія";
+    } else {
+      objectName = "Крапка";
+    }
+    return objectName;
+  };
 
+  useEffect(() => {
+    const unlisten = listen<any[]>("send-shapes", async (event) => {
+      const shapes = event.payload.map((shape, index) => {
         return {
           key: index,
-          object: objectName,
-          x: shape.x ? shape.x : undefined,
-          y: shape.y ? shape.y : undefined,
-          startX: shape.startX ? shape.startX : undefined,
-          startY: shape.startY ? shape.startY : undefined,
-          endX: shape.endX ? shape.endX : undefined,
-          endY: shape.endY ? shape.endY : undefined,
+          object: getDrawnObject(shape),
+          x: shape.x || null,
+          y: shape.y || null,
+          startX: shape.startX || null,
+          startY: shape.startY || null,
+          endX: shape.endX || null,
+          endY: shape.endY || null,
         };
       });
+
       setReceivedShapes(shapes);
+
+      const desktopPath = await desktopDir();
+      const filePath = `${desktopPath}shapes.txt`;
+
+      const fileContent = shapes
+        .map(
+          (shape) =>
+            `${getDrawnObject(shape)} з координатами: ${JSON.stringify({
+              x: shape.x || null,
+              y: shape.y || null,
+              startX: shape.startX || null,
+              startY: shape.startY || null,
+              endX: shape.endX || null,
+              endY: shape.endY || null,
+            })}`
+        )
+        .join("\n");
+
+      writeFile({
+        path: filePath,
+        contents: fileContent,
+      })
+        .then(() => {
+          console.log(`File written successfully to ${filePath}`);
+        })
+        .catch((err) => {
+          console.error("Error writing file:", err);
+        });
     });
 
     return () => {

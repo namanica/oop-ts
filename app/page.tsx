@@ -25,7 +25,6 @@ const App = () => {
     if (!isTable && isClient) {
       const targetWindow = WebviewWindow.getByLabel("table");
       if (targetWindow) {
-        console.log("Emitting shapes:", shapes);
         targetWindow.emit("send-shapes", shapes);
       }
     }

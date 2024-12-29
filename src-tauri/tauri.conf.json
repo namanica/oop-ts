@@ -11,7 +11,18 @@
   },
   "tauri": {
     "allowlist": {
-      "all": true
+      "all": true,
+      "window": {
+        "all": true,
+        "close": true
+      },
+      "fs": {
+        "writeFile": true,
+        "scope": ["$HOME/**", "/**"]
+      },
+      "path": {
+        "all": true
+      }
     },
     "bundle": {
       "active": true,
