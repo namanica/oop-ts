@@ -6,16 +6,25 @@ import { useEffect, useState } from "react";
 // import { Lab3 } from "./components/lab3/Lab3";
 // import { Lab4 } from "./components/lab4/Lab4";
 import { Lab5 } from "./components/lab5/Lab5";
-import { Table } from "./components/lab5/Table";
+import { formatToClass, Table } from "./components/lab5/Table";
 import { Shape } from "./modules/MyEditor";
 import { WebviewWindow } from "@tauri-apps/api/window";
+import { listen } from "@tauri-apps/api/event";
 
 const App = () => {
   const [isClient, setIsClient] = useState(false);
-  const [shapes, setShapes] = useState<Shape[]>([]);
+  const [shapes, setShapes] = useState<any[]>([]);
 
   useEffect(() => {
     setIsClient(true);
+
+    const unlisten = listen<any[]>("update-shapes", (event) => {
+      setShapes(formatToClass(event.payload));
+    });
+
+    return () => {
+      unlisten.then((cleanup) => cleanup());
+    };
   }, []);
 
   const urlParams = new URLSearchParams(window.location.search);

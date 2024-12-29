@@ -1,112 +1,140 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { listen } from "@tauri-apps/api/event";
-import { Table as AntTable } from "antd";
+import { Table as AntTable, Button } from "antd";
 import { useEffect, useState } from "react";
-import { writeFile } from "@tauri-apps/api/fs";
-import { desktopDir } from "@tauri-apps/api/path";
+// import { writeFile } from "@tauri-apps/api/fs";
+// import { desktopDir } from "@tauri-apps/api/path";
+import { DeleteOutlined } from "@ant-design/icons";
+import { WebviewWindow } from "@tauri-apps/api/window";
+import {
+  Cube,
+  Dot,
+  Ellipse,
+  Line,
+  LineWithCircles,
+  Rectangle,
+} from "@/app/modules/MyEditor";
 
-const columns = [
-  {
-    title: "Фігура",
-    dataIndex: "object",
-    key: "object",
-  },
-  {
-    title: "x",
-    dataIndex: "x",
-    key: "x",
-  },
-  {
-    title: "y",
-    dataIndex: "y",
-    key: "y",
-  },
-  {
-    title: "startX",
-    dataIndex: "startX",
-    key: "startX",
-  },
-  {
-    title: "startY",
-    dataIndex: "startY",
-    key: "startY",
-  },
-  {
-    title: "endX",
-    dataIndex: "endX",
-    key: "endX",
-  },
-  {
-    title: "endY",
-    dataIndex: "endY",
-    key: "endY",
-  },
-];
+export const getDrawnObject = (shape: any) => {
+  if (shape.radiusX && !shape.radius) return "Еліпс";
+  if (shape.width && !shape.depth) return "Прямокутник";
+  if (shape.radius) return "Лінія з кружечками";
+  if (shape.depth) return "Куб";
+  if (shape.startX && !shape.radius) return "Лінія";
+  return "Крапка";
+};
+
+export const formatToClass = (shapes: any[]) => {
+  return shapes.map((shape) => {
+    const objectName = getDrawnObject(shape);
+    if (objectName === "Еліпс") {
+      return new Ellipse(
+        shape.x,
+        shape.y,
+        shape.radiusX,
+        shape.radiusY,
+        shape.color
+      );
+    } else if (objectName === "Крапка") {
+      return new Dot(shape.x, shape.y, shape.color);
+    } else if (objectName === "Куб") {
+      return new Cube(shape.x, shape.y, shape.width, shape.height, shape.color);
+    } else if (objectName === "Лінія") {
+      return new Line(
+        shape.startX,
+        shape.startY,
+        shape.endX,
+        shape.endY,
+        shape.color
+      );
+    } else if (objectName === "Лінія з кружечками") {
+      return new LineWithCircles(
+        shape.startX,
+        shape.startY,
+        shape.endX,
+        shape.endY,
+        shape.color
+      );
+    } else if (objectName === "Прямокутник") {
+      return new Rectangle(
+        shape.x,
+        shape.y,
+        shape.width,
+        shape.height,
+        shape.color
+      );
+    }
+  });
+};
+
+interface ShapesForTable {
+  key: number;
+  object: string;
+  x: number | null;
+  y: number | null;
+  startX: number | null;
+  startY: number | null;
+  endX: number | null;
+  endY: number | null;
+}
 
 export const Table = () => {
-  const [receivedShapes, setReceivedShapes] = useState<any[]>([]);
-  const getDrawnObject = (shape: any) => {
-    let objectName;
-    if (shape.radiusX && !shape.radius) {
-      objectName = "Еліпс";
-    } else if (shape.width && !shape.depth) {
-      objectName = "Прямокутник";
-    } else if (shape.radius) {
-      objectName = "Лінія з кружечками";
-    } else if (shape.depth) {
-      objectName = "Куб";
-    } else if (shape.startX && !shape.radius) {
-      objectName = "Лінія";
-    } else {
-      objectName = "Крапка";
+  const [receivedShapes, setReceivedShapes] = useState<ShapesForTable[]>([]);
+  const [originalShapes, setOriginalShapes] = useState<any[]>([]);
+
+  const columns = [
+    { title: "Фігура", dataIndex: "object", key: "object" },
+    { title: "x", dataIndex: "x", key: "x" },
+    { title: "y", dataIndex: "y", key: "y" },
+    { title: "startX", dataIndex: "startX", key: "startX" },
+    { title: "startY", dataIndex: "startY", key: "startY" },
+    { title: "endX", dataIndex: "endX", key: "endX" },
+    { title: "endY", dataIndex: "endY", key: "endY" },
+    {
+      title: "",
+      dataIndex: "delete",
+      key: "delete",
+      render: (_: any, record: ShapesForTable) => (
+        <Button
+          type="primary"
+          shape="circle"
+          icon={<DeleteOutlined />}
+          onClick={() => handleDelete(record.key)}
+        />
+      ),
+    },
+  ];
+
+  const handleDelete = (key: number) => {
+    const updatedShapes = receivedShapes.filter((shape) => shape.key !== key);
+    const updatedOriginalShapes = originalShapes.filter(
+      (_, index) => index !== key
+    );
+
+    setReceivedShapes(updatedShapes);
+    setOriginalShapes(updatedOriginalShapes);
+
+    const mainWindow = WebviewWindow.getByLabel("main");
+    if (mainWindow) {
+      mainWindow.emit("update-shapes", updatedOriginalShapes);
     }
-    return objectName;
   };
 
   useEffect(() => {
-    const unlisten = listen<any[]>("send-shapes", async (event) => {
-      const shapes = event.payload.map((shape, index) => {
-        return {
-          key: index,
-          object: getDrawnObject(shape),
-          x: shape.x || null,
-          y: shape.y || null,
-          startX: shape.startX || null,
-          startY: shape.startY || null,
-          endX: shape.endX || null,
-          endY: shape.endY || null,
-        };
-      });
+    const unlisten = listen<any[]>("send-shapes", (event) => {
+      const shapes = event.payload.map((shape, index) => ({
+        key: index,
+        object: getDrawnObject(shape),
+        x: shape.x || null,
+        y: shape.y || null,
+        startX: shape.startX || null,
+        startY: shape.startY || null,
+        endX: shape.endX || null,
+        endY: shape.endY || null,
+      }));
 
       setReceivedShapes(shapes);
-
-      const desktopPath = await desktopDir();
-      const filePath = `${desktopPath}shapes.txt`;
-
-      const fileContent = shapes
-        .map(
-          (shape) =>
-            `${getDrawnObject(shape)} з координатами: ${JSON.stringify({
-              x: shape.x || null,
-              y: shape.y || null,
-              startX: shape.startX || null,
-              startY: shape.startY || null,
-              endX: shape.endX || null,
-              endY: shape.endY || null,
-            })}`
-        )
-        .join("\n");
-
-      writeFile({
-        path: filePath,
-        contents: fileContent,
-      })
-        .then(() => {
-          console.log(`File written successfully to ${filePath}`);
-        })
-        .catch((err) => {
-          console.error("Error writing file:", err);
-        });
+      setOriginalShapes(event.payload);
     });
 
     return () => {
@@ -116,6 +144,7 @@ export const Table = () => {
 
   return (
     <AntTable
+      rowSelection={{ type: "checkbox" }}
       dataSource={receivedShapes}
       columns={columns}
       pagination={false}
