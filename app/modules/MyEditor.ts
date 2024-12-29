@@ -1,20 +1,35 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export abstract class Shape {
-  protected color: string;
-  constructor(color: string) {
-    this.color = color;
+  protected fillColor: string;
+  protected strokeColor: string;
+
+  constructor(
+    fillColor: string = "transparent",
+    strokeColor: string = "black"
+  ) {
+    this.fillColor = fillColor;
+    this.strokeColor = strokeColor;
   }
 
   abstract draw(ctx: CanvasRenderingContext2D): void;
   abstract drawPreview(ctx: CanvasRenderingContext2D): void;
+
+  highlight(strokeColor: string): void {
+    this.strokeColor = strokeColor;
+  }
 }
 
 export class Dot extends Shape {
   protected x: number;
   protected y: number;
 
-  constructor(x: number, y: number, color: string = "blue") {
-    super(color);
+  constructor(
+    x: number,
+    y: number,
+    fillColor: string = "transparent",
+    strokeColor: string = "black"
+  ) {
+    super(fillColor, strokeColor);
     this.x = x;
     this.y = y;
   }
@@ -22,7 +37,7 @@ export class Dot extends Shape {
   draw(ctx: CanvasRenderingContext2D): void {
     ctx.beginPath();
     ctx.arc(this.x, this.y, 5, 0, Math.PI * 2);
-    ctx.fillStyle = this.color;
+    ctx.fillStyle = this.strokeColor;
     ctx.fill();
   }
 
@@ -42,9 +57,10 @@ export class Line extends Shape {
     startY: number,
     endX: number,
     endY: number,
-    color: string = "blue"
+    fillColor: string = "transparent",
+    strokeColor: string = "black"
   ) {
-    super(color);
+    super(fillColor, strokeColor);
     this.startX = startX;
     this.startY = startY;
     this.endX = endX;
@@ -56,7 +72,7 @@ export class Line extends Shape {
     ctx.moveTo(this.startX, this.startY);
     ctx.lineTo(this.endX, this.endY);
     ctx.setLineDash([]);
-    ctx.strokeStyle = this.color;
+    ctx.strokeStyle = this.strokeColor;
     ctx.lineWidth = 2;
     ctx.stroke();
   }
@@ -66,7 +82,7 @@ export class Line extends Shape {
     ctx.moveTo(this.startX, this.startY);
     ctx.lineTo(this.endX, this.endY);
     ctx.setLineDash([5, 5]);
-    ctx.strokeStyle = "black";
+    ctx.strokeStyle = this.strokeColor;
     ctx.lineWidth = 2;
     ctx.stroke();
   }
@@ -83,9 +99,10 @@ export class Rectangle extends Shape {
     y: number,
     width: number,
     height: number,
-    color: string = "yellow"
+    fillColor: string = "yellow",
+    strokeColor: string = "black"
   ) {
-    super(color);
+    super(fillColor, strokeColor);
     this.x = x;
     this.y = y;
     this.width = width;
@@ -93,16 +110,16 @@ export class Rectangle extends Shape {
   }
 
   draw(ctx: CanvasRenderingContext2D): void {
-    ctx.fillStyle = this.color;
+    ctx.fillStyle = this.fillColor;
     ctx.fillRect(this.x, this.y, this.width, this.height);
     ctx.setLineDash([]);
-    ctx.strokeStyle = "black";
+    ctx.strokeStyle = this.strokeColor;
     ctx.strokeRect(this.x, this.y, this.width, this.height);
   }
 
   drawPreview(ctx: CanvasRenderingContext2D): void {
     ctx.setLineDash([5, 5]);
-    ctx.strokeStyle = "black";
+    ctx.strokeStyle = this.strokeColor;
     ctx.strokeRect(this.x, this.y, this.width, this.height);
   }
 }
@@ -118,9 +135,10 @@ export class Ellipse extends Shape {
     y: number,
     radiusX: number,
     radiusY: number,
-    color: string = "grey"
+    fillColor: string = "grey",
+    strokeColor: string = "black"
   ) {
-    super(color);
+    super(fillColor, strokeColor);
     this.x = x;
     this.y = y;
     this.radiusX = radiusX;
@@ -130,10 +148,10 @@ export class Ellipse extends Shape {
   draw(ctx: CanvasRenderingContext2D): void {
     ctx.beginPath();
     ctx.ellipse(this.x, this.y, this.radiusX, this.radiusY, 0, 0, Math.PI * 2);
-    ctx.fillStyle = this.color;
+    ctx.fillStyle = this.fillColor;
     ctx.fill();
     ctx.setLineDash([]);
-    ctx.strokeStyle = "black";
+    ctx.strokeStyle = this.strokeColor;
     ctx.stroke();
   }
 
@@ -141,7 +159,7 @@ export class Ellipse extends Shape {
     ctx.beginPath();
     ctx.ellipse(this.x, this.y, this.radiusX, this.radiusY, 0, 0, Math.PI * 2);
     ctx.setLineDash([5, 5]);
-    ctx.strokeStyle = "black";
+    ctx.strokeStyle = this.strokeColor;
     ctx.stroke();
   }
 }
@@ -165,9 +183,10 @@ export class LineWithCircles extends Line implements Circle {
     endX: number,
     endY: number,
     radius: number = 5,
-    color: string = "blue"
+    fillColor: string = "black",
+    strokeColor: string = "black"
   ) {
-    super(startX, startY, endX, endY, color);
+    super(startX, startY, endX, endY, fillColor, strokeColor);
     this.radius = radius;
   }
 
@@ -186,14 +205,20 @@ export class LineWithCircles extends Line implements Circle {
 
   draw(ctx: CanvasRenderingContext2D): void {
     super.draw(ctx);
-    this.drawCircle(ctx, this.startX, this.startY, this.radius, this.color);
-    this.drawCircle(ctx, this.endX, this.endY, this.radius, this.color);
+    this.drawCircle(
+      ctx,
+      this.startX,
+      this.startY,
+      this.radius,
+      this.strokeColor
+    );
+    this.drawCircle(ctx, this.endX, this.endY, this.radius, this.strokeColor);
   }
 
   drawPreview(ctx: CanvasRenderingContext2D): void {
     super.drawPreview(ctx);
-    this.drawCircle(ctx, this.startX, this.startY, this.radius, "black");
-    this.drawCircle(ctx, this.endX, this.endY, this.radius, "black");
+    this.drawCircle(ctx, this.startX, this.startY, this.radius, this.fillColor);
+    this.drawCircle(ctx, this.endX, this.endY, this.radius, this.fillColor);
   }
 }
 
@@ -227,9 +252,10 @@ export class Cube extends LineMixin(Rectangle) {
     width: number,
     height: number,
     depth: number = 30,
-    color: string = "transparent"
+    fillColor: string = "transparent",
+    strokeColor: string = "black"
   ) {
-    super(x, y, width, height, color);
+    super(x, y, width, height, fillColor, strokeColor);
     this.depth = depth;
   }
 
@@ -237,7 +263,7 @@ export class Cube extends LineMixin(Rectangle) {
     const backX = this.x + this.depth;
     const backY = this.y + this.depth;
 
-    ctx.strokeStyle = "black";
+    ctx.strokeStyle = this.strokeColor;
     ctx.strokeRect(backX, backY, this.width, this.height);
 
     this.drawLine(ctx, this.x, this.y, backX, backY);

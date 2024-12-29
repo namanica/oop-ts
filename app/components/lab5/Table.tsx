@@ -2,8 +2,6 @@
 import { listen } from "@tauri-apps/api/event";
 import { Table as AntTable, Button } from "antd";
 import { useEffect, useState } from "react";
-// import { writeFile } from "@tauri-apps/api/fs";
-// import { desktopDir } from "@tauri-apps/api/path";
 import { DeleteOutlined } from "@ant-design/icons";
 import { WebviewWindow } from "@tauri-apps/api/window";
 import {
@@ -142,9 +140,24 @@ export const Table = () => {
     };
   }, []);
 
+  const [selectedKeys, setSelectedKeys] = useState<number[]>([]);
+  console.log(selectedKeys);
+
+  const handleSelect = (selectedRowKeys: React.Key[]) => {
+    setSelectedKeys(selectedRowKeys as number[]);
+
+    const mainWindow = WebviewWindow.getByLabel("main");
+    if (mainWindow) {
+      mainWindow.emit("highlight-shapes", selectedRowKeys);
+    }
+  };
+
   return (
     <AntTable
-      rowSelection={{ type: "checkbox" }}
+      rowSelection={{
+        type: "checkbox",
+        onChange: handleSelect,
+      }}
       dataSource={receivedShapes}
       columns={columns}
       pagination={false}

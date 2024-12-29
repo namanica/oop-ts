@@ -27,6 +27,25 @@ const App = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const unlisten = listen<number[]>("highlight-shapes", (event) => {
+      const highlightedKeys = event.payload;
+      const updatedShapes = shapes.map((shape, index) => {
+        if (highlightedKeys.includes(index)) {
+          shape.highlight("red");
+        } else {
+          shape.highlight("black");
+        }
+        return shape;
+      });
+      setShapes([...updatedShapes]);
+    });
+
+    return () => {
+      unlisten.then((cleanup) => cleanup());
+    };
+  }, [shapes]);
+
   const urlParams = new URLSearchParams(window.location.search);
   const isTable = urlParams.get("window") === "table";
 
