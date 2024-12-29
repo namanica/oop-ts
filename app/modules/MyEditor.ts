@@ -232,7 +232,7 @@ function LineMixin<TBase extends Constructor>(Base: TBase) {
       startY: number,
       endX: number,
       endY: number,
-      color: string = "black"
+      color: string
     ) {
       ctx.beginPath();
       ctx.moveTo(startX, startY);
@@ -266,21 +266,30 @@ export class Cube extends LineMixin(Rectangle) {
     ctx.strokeStyle = this.strokeColor;
     ctx.strokeRect(backX, backY, this.width, this.height);
 
-    this.drawLine(ctx, this.x, this.y, backX, backY);
-    this.drawLine(ctx, this.x + this.width, this.y, backX + this.width, backY);
+    this.drawLine(ctx, this.x, this.y, backX, backY, this.strokeColor);
+    this.drawLine(
+      ctx,
+      this.x + this.width,
+      this.y,
+      backX + this.width,
+      backY,
+      this.strokeColor
+    );
     this.drawLine(
       ctx,
       this.x,
       this.y + this.height,
       backX,
-      backY + this.height
+      backY + this.height,
+      this.strokeColor
     );
     this.drawLine(
       ctx,
       this.x + this.width,
       this.y + this.height,
       backX + this.width,
-      backY + this.height
+      backY + this.height,
+      this.strokeColor
     );
   }
 
