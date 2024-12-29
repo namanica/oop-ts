@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { MenuProps } from "antd";
 import { WebviewWindow } from "@tauri-apps/api/window";
 import { Ellipse, Dot, Cube, Line, LineWithCircles, Rectangle } from "@/app/modules/MyEditor";

@@ -1,25 +1,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { listen } from "@tauri-apps/api/event";
 import { Table as AntTable, Button } from "antd";
 import { useEffect, useState } from "react";
 import { DeleteOutlined } from "@ant-design/icons";
-import { WebviewWindow } from "@tauri-apps/api/window";
-import { getDrawnObject } from "./constants";
-
-interface ShapesForTable {
-  key: number;
-  object: string;
-  x: number | null;
-  y: number | null;
-  startX: number | null;
-  startY: number | null;
-  endX: number | null;
-  endY: number | null;
-}
+import { ShapesForTable, TableManager } from "@/app/modules/TableManager";
 
 export const Table = () => {
+  const [tableManager] = useState(() => TableManager.getInstance());
   const [receivedShapes, setReceivedShapes] = useState<ShapesForTable[]>([]);
-  const [originalShapes, setOriginalShapes] = useState<any[]>([]);
+
+  useEffect(() => {
+    const updateShapes = () => {
+      setReceivedShapes(tableManager.getReceivedShapes());
+    };
+
+    tableManager.subscribe(updateShapes);
+    tableManager.listenForShapes();
+
+    return () => {
+      tableManager.unsubscribe(updateShapes);
+    };
+  }, [tableManager]);
 
   const columns = [
     { title: "Фігура", dataIndex: "object", key: "object" },
@@ -38,54 +38,14 @@ export const Table = () => {
           type="primary"
           shape="circle"
           icon={<DeleteOutlined />}
-          onClick={() => handleDelete(record.key)}
+          onClick={() => tableManager.deleteShape(record.key)}
         />
       ),
     },
   ];
 
-  const handleDelete = (key: number) => {
-    const updatedShapes = receivedShapes.filter((shape) => shape.key !== key);
-    const updatedOriginalShapes = originalShapes.filter(
-      (_, index) => index !== key
-    );
-
-    setReceivedShapes(updatedShapes);
-    setOriginalShapes(updatedOriginalShapes);
-
-    const mainWindow = WebviewWindow.getByLabel("main");
-    if (mainWindow) {
-      mainWindow.emit("update-shapes", updatedOriginalShapes);
-    }
-  };
-
-  useEffect(() => {
-    const unlisten = listen<any[]>("send-shapes", (event) => {
-      const shapes = event.payload.map((shape, index) => ({
-        key: index,
-        object: getDrawnObject(shape),
-        x: shape.x || null,
-        y: shape.y || null,
-        startX: shape.startX || null,
-        startY: shape.startY || null,
-        endX: shape.endX || null,
-        endY: shape.endY || null,
-      }));
-
-      setReceivedShapes(shapes);
-      setOriginalShapes(event.payload);
-    });
-
-    return () => {
-      unlisten.then((cleanup) => cleanup());
-    };
-  }, []);
-
   const handleSelect = (selectedRowKeys: React.Key[]) => {
-    const mainWindow = WebviewWindow.getByLabel("main");
-    if (mainWindow) {
-      mainWindow.emit("highlight-shapes", selectedRowKeys);
-    }
+    tableManager.highlightShapes(selectedRowKeys);
   };
 
   return (
