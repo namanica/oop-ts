@@ -65,11 +65,31 @@
     },
     "windows": [
       {
+        "label": "main",
+        "url": "/?window=lab6",
+        "title": "lab 6",
+        "width": 600,
+        "height": 500,
         "fullscreen": false,
-        "height": 600,
-        "resizable": true,
-        "title": "oop-ts",
-        "width": 800
+        "resizable": true
+      },
+      {
+        "label": "obj2",
+        "url": "/?window=obj2",
+        "title": "object 2",
+        "width": 600,
+        "height": 500,
+        "fullscreen": false,
+        "resizable": true
+      },
+      {
+        "label": "obj3",
+        "url": "/?window=obj3",
+        "title": "object 3",
+        "width": 600,
+        "height": 500,
+        "fullscreen": false,
+        "resizable": true
       }
     ]
   }
